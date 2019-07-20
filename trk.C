@@ -59,9 +59,9 @@ for(Int_t k = 2484; k<2486; k++){
 
   // TFile *f1 = new TFile(Form("../../../../abishek/hallc-replay-f2xem/ROOTfiles/realpass-0-shms/%s_replay_production_%d_-1.root",spec.c_str(),k),"READ");
   
-  //TFile *f1 = new TFile(Form("ROOTfiles/%s_replay_production_all_%d_500000.root",spec.c_str(),k),"READ");
+  TFile *f1 = new TFile(Form("ROOTfiles/%s_replay_production_all_%d_500000.root",spec.c_str(),k),"READ");
 
-  TFile *f1 = new TFile(Form("/volatile/hallc/xem2/biswas/ROOTfiles/abi-update-12jul-2019/%s_replay_production_%d_50000.root",spec.c_str(),k),"READ");
+  // TFile *f1 = new TFile(Form("/volatile/hallc/xem2/biswas/ROOTfiles/abi-update-12jul-2019/%s_replay_production_%d_50000.root",spec.c_str(),k),"READ");
   
  
 if((!f1) || (f1->IsZombie())) {
@@ -74,16 +74,20 @@ TTree *T =(TTree*)f1->Get("T");
 
 Int_t totev = T -> GetEntries();
 
- Double_t cal_etotnorm, cer_npeSum, dc_ntrack;
+ Double_t cal_etotnorm, cer_npeSum, dc_ntrack, hod_1x_neg;
 
-T->SetBranchAddress("P.cal.etotnorm",&cal_etotnorm);
-T->SetBranchAddress("P.ngcer.npeSum",&cer_npeSum);
-T->SetBranchAddress("P.dc.ntrack",&dc_ntrack);
+ T->SetBranchAddress("P.cal.etotnorm",&cal_etotnorm);
+ T->SetBranchAddress("P.ngcer.npeSum",&cer_npeSum);
+ T->SetBranchAddress("P.dc.ntrack",&dc_ntrack);
+ T->SetBranchAddress("P.hod.1x.numGoodNegAdcHits",&hod_1x_neg);
 
  TH1F *hcal_etotnorm = new TH1F("hcal_etotnorm","hcal_etotnorm",100., 0., 2.0);
  TH1F *hcer_npeSum = new TH1F("hcer_npeSum","hcer_npeSum",100., -1.0, 80.0);
  TH1F *hdc_ntrack = new TH1F("dc_ntrack","dc_ntack",100., 0.0, 20.0);
+ TH1F *hhod_1x_neg = new TH1F("hod_1x_neg","hod_1x_neg",14., 0.0, 13.0);
  
+
+
  Int_t electron_should = 0; 
  Int_t track_did = 0;
  Double_t tracking_efficiency; 
@@ -95,15 +99,16 @@ T->GetEntry(k);
  hcal_etotnorm->Fill(cal_etotnorm);
  hcer_npeSum->Fill(cer_npeSum);
  hdc_ntrack->Fill(dc_ntrack); 
- 
-if(cer_npeSum > 2.0 && cal_etotnorm > 0.7 ){
- electron_should++ ; 
- }
+ hhod_1x_neg->Fill(hod_1x_neg);
 
+ if(cer_npeSum > 2.0 && cal_etotnorm > 0.7 ){
+   electron_should++ ; 
+ }
+ 
  if(cer_npeSum > 2.0 && cal_etotnorm > 0.7  && dc_ntrack > 0){
    track_did++;
  }
-} 
+ } 
  cout << electron_should << endl; 
  cout << track_did << endl;
  tracking_efficiency = (float(track_did)/float(electron_should));
@@ -138,7 +143,8 @@ if(cer_npeSum > 2.0 && cal_etotnorm > 0.7 ){
  c1->cd(3);
  hdc_ntrack->Draw();
 
-
+c1->cd(3);
+ hhod_1x_neg->Draw();
 
 
 TImage *img1 = TImage::Create();
